@@ -27,6 +27,20 @@ BACKENDS = {
             "`.github/workflows/docs.yml` publishes it to GitHub Pages once Pages is enabled with GitHub Actions as its source."
         ),
     },
+    "mkdocs": {
+        "label": "MkDocs: API reference from docstrings",
+        # MkDocs 2.0 drops the plugin system mkdocstrings relies on.
+        "docs_dependencies": (
+            '"mkdocs>=1.6,<2", "mkdocs-api-autonav>=0.1", "mkdocs-autorefs>=1.2", "mkdocs-material>=9.5", '
+            '"mkdocstrings[python]>=0.27"'
+        ),
+        "docs_readme": (
+            "Built from `docs/` and `mkdocs.yml` with [MkDocs](https://www.mkdocs.org) and Material, "
+            "the API reference generated from docstrings: "
+            'after `pip install -e ".[docs]"` (or `uv sync --extra docs`), `mkdocs serve` serves it locally. '
+            "`.github/workflows/docs.yml` publishes it to GitHub Pages once Pages is enabled with GitHub Actions as its source."
+        ),
+    },
 }
 
 TEMPLATE_SUFFIX = ".tmpl"

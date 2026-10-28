@@ -37,27 +37,50 @@ def refused(tmp_path, *options, folder="my-project"):
     return exit_info.value.code == 2
 
 
-def test_a_project_gets_the_common_files_and_its_docs_backend(tmp_path):
-    expected = {
-        ".github/workflows/docs.yml",
-        ".github/workflows/lint.yml",
-        ".github/workflows/tests.yml",
-        ".gitignore",
-        ".pre-commit-config.yaml",
-        "LICENSE",
-        "README.md",
-        "docs/_static/footer.md",
-        "docs/_static/scene.css",
-        "docs/images/favicon.png",
-        "docs/images/scene-logo.png",
-        "docs/index.md",
-        "docs/myst.yml",
-        "my_project/__init__.py",
-        "my_project/version.py",
-        "pyproject.toml",
-        "tests/test_version.py",
-    }
-    assert expected <= files_of(generate(tmp_path))
+COMMON_FILES = {
+    ".github/workflows/docs.yml",
+    ".github/workflows/lint.yml",
+    ".github/workflows/tests.yml",
+    ".gitignore",
+    ".pre-commit-config.yaml",
+    "LICENSE",
+    "README.md",
+    "docs/images/favicon.png",
+    "docs/images/scene-logo.png",
+    "docs/index.md",
+    "my_project/__init__.py",
+    "my_project/version.py",
+    "pyproject.toml",
+    "tests/test_version.py",
+}
+BACKEND_FILES = {
+    "jupyter-book": {"docs/myst.yml", "docs/_static/footer.md", "docs/_static/scene.css"},
+    "mkdocs": {"mkdocs.yml", "docs/stylesheets/scene.css"},
+}
+
+
+def test_every_backend_is_tested():
+    assert set(BACKEND_FILES) == set(cli.BACKENDS)
+
+
+@pytest.mark.parametrize("backend", BACKEND_FILES)
+def test_a_project_gets_the_common_files_and_only_its_own_docs_backend(tmp_path, backend):
+    project = files_of(generate(tmp_path, f"--docs={backend}"))
+    assert COMMON_FILES | BACKEND_FILES[backend] <= project
+    other_backends = set().union(*(files for name, files in BACKEND_FILES.items() if name != backend))
+    assert project & other_backends == set()
+
+
+def test_the_backends_ship_the_same_logo_and_favicon():
+    for image in ("scene-logo.png", "favicon.png"):
+        copies = {(cli.SKELETON / backend / "docs" / "images" / image).read_bytes() for backend in cli.BACKENDS}
+        assert len(copies) == 1, image
+
+
+def test_the_docs_extra_follows_the_backend(tmp_path):
+    pyproject = (generate(tmp_path, "--docs=mkdocs") / "pyproject.toml").read_text(encoding="utf-8")
+    assert '"mkdocstrings[python]>=0.27"' in pyproject
+    assert "jupyter-book" not in pyproject
 
 
 def test_no_skeleton_naming_is_left_in_a_project(tmp_path):
@@ -303,7 +326,15 @@ def test_a_generated_project_installs_lints_and_passes_its_tests(tmp_path):
 
 @E2E
 @pytest.mark.skipif(shutil.which("node") is None, reason="Jupyter Book needs Node.js")
-def test_a_generated_project_builds_its_docs(tmp_path):
-    dest = generate(tmp_path)
+def test_a_generated_jupyter_book_builds(tmp_path):
+    dest = generate(tmp_path, "--docs=jupyter-book")
     run(dest, "uv", "sync", "--extra", "docs")
     run(dest / "docs", "uv", "run", "jupyter", "book", "build", "--html", "--strict")
+
+
+@E2E
+def test_a_generated_mkdocs_site_builds_with_an_api_page_per_module(tmp_path):
+    dest = generate(tmp_path, "--docs=mkdocs")
+    run(dest, "uv", "sync", "--extra", "docs")
+    run(dest, "uv", "run", "mkdocs", "build", "--strict")
+    assert (dest / "site" / "reference" / "my_project" / "version" / "index.html").is_file()

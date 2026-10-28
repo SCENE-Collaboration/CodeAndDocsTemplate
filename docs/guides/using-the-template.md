@@ -48,6 +48,7 @@ You will need to enter:
 - A one-line description
 - The author
 - The GitHub URL
+- The documentation: Jupyter Book (guides and notebooks) or MkDocs (API reference from docstrings)
 
 This will show a summary, and wait for confirmation.
 
@@ -60,7 +61,7 @@ The project then contains:
 
 - `pyproject.toml`, the package folder and a first test example in `tests/`;
 - `.pre-commit-config.yaml` and three GitHub Actions workflows: lint, tests and docs;
-- `docs/`, a Jupyter Book with SCENE's logo, colours and footer;
+- `docs/`, a Jupyter Book, or an MkDocs site with `mkdocs.yml;
 - `LICENSE` (Apache-2.0) and a short `README.md`.
 
 ## 2. Set up your environment
@@ -144,5 +145,5 @@ Commit `uv.lock` with the change.
 - To publish the docs, enable GitHub Pages once: see [Documentation with Jupyter Book](jupyter-book.md#publish).
 
 ```{important}
-No docs needed? Delete `docs/` and `.github/workflows/docs.yml`.
+No docs needed? Delete `docs/`, `.github/workflows/docs.yml`, and `mkdocs.yml` if present.
 ```
