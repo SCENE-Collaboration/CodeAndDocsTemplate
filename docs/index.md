@@ -2,7 +2,7 @@
 title: SCENE Code & Data Guidelines
 ---
 
-```{image} images/scene-logo.png
+```{image} ../src/scene_repo_template/skeleton/jupyter-book/docs/images/scene-logo.png
 :alt: SCENE logo
 :width: 140px
 :align: center
