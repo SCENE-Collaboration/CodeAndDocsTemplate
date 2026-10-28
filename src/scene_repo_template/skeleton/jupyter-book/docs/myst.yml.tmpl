@@ -1,0 +1,20 @@
+# Jupyter Book 2 configuration: https://jupyterbook.org
+# Preview locally with `jupyter book start`; build with `jupyter book build --html`.
+version: 1
+project:
+  title: "$title"
+  description: "$description"
+  github: $github_url
+  license: Apache-2.0
+  toc:
+    - file: index.md
+
+site:
+  template: book-theme
+  options:
+    logo: images/scene-logo.png
+    logo_text: SCENE
+    favicon: images/favicon.png
+    style: _static/scene.css
+  parts:
+    primary_sidebar_footer: _static/footer.md
