@@ -61,8 +61,19 @@ The project then contains:
 
 - `pyproject.toml`, the package folder and a first test example in `tests/`;
 - `.pre-commit-config.yaml` and three GitHub Actions workflows: lint, tests and docs;
-- `docs/`, a Jupyter Book, or an MkDocs site with `mkdocs.yml;
+- `docs/`, a Jupyter Book, or an MkDocs site with `mkdocs.yml`;
 - `LICENSE` (Apache-2.0) and a short `README.md`.
+
+### Which documentation backend?
+
+| | Jupyter Book | MkDocs |
+| --- | --- | --- |
+| Best for | Guides, tutorials and analyses shown as notebooks | A package with an API |
+| Needed | Markdown and notebooks (`.ipynb`), shown with their saved outputs | Markdown for the documentation, plus docstrings on the code |
+| Configuration | `docs/myst.yml` | `mkdocs.yml` |
+| Preview | `jupyter book start` in `docs/` (needs [Node.js](https://nodejs.org)) | `mkdocs serve` |
+
+A project can only have one. To switch later, generate a project with the other backend and copy its `docs/`, `.github/workflows/docs.yml`, `mkdocs.yml` if any, and the `docs` extra of `pyproject.toml`.
 
 ## 2. Set up your environment
 
@@ -142,7 +153,7 @@ Commit `uv.lock` with the change.
 
 - Create the repository on GitHub at the URL you decided, then commit and push.
 - CI runs as soon as you push, if the repository is public and Actions is enabled (**Settings → Actions**): see *Continuous Integration* in the [Project standards](guidelines.md).
-- To publish the docs, enable GitHub Pages once: see [Documentation with Jupyter Book](jupyter-book.md#publish).
+- To publish the docs, enable GitHub Pages once: in **Settings → Pages**, set **Source** to **GitHub Actions**. The docs workflow then publishes on every push to `main`, for either backend. More on Jupyter Book: [Documentation with Jupyter Book](jupyter-book.md#publish).
 
 ```{important}
 No docs needed? Delete `docs/`, `.github/workflows/docs.yml`, and `mkdocs.yml` if present.
