@@ -1,0 +1,226 @@
+import os
+import shutil
+import subprocess
+from pathlib import Path
+from string import Template
+
+import pytest
+
+from scene_repo_template import cli
+
+REPOSITORY = Path(__file__).parents[1]
+ANSWERS = {"dist_name", "package", "title", "description", "author", "github_url"}
+
+# Installing and building a generated project needs uv, Node.js and the network; CI sets this variable.
+E2E = pytest.mark.skipif(
+    not os.environ.get("SCENE_TEMPLATE_E2E"), reason="set SCENE_TEMPLATE_E2E=1 to install and build a generated project"
+)
+
+
+def generate(tmp_path, *options, folder="my-project"):
+    dest = tmp_path / folder
+    assert cli.main(["new", str(dest), "--yes", *options]) == 0
+    return dest
+
+
+def files_of(root):
+    return {path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_file()}
+
+
+def refused(tmp_path, *options, folder="my-project"):
+    with pytest.raises(SystemExit) as exit_info:
+        cli.main(["new", str(tmp_path / folder), "--yes", *options])
+    return exit_info.value.code == 2
+
+
+def test_a_project_gets_the_common_files_and_its_docs_backend(tmp_path):
+    expected = {
+        ".github/workflows/docs.yml",
+        ".github/workflows/lint.yml",
+        ".github/workflows/tests.yml",
+        ".gitignore",
+        ".pre-commit-config.yaml",
+        "LICENSE",
+        "README.md",
+        "docs/_static/footer.md",
+        "docs/_static/scene.css",
+        "docs/images/favicon.png",
+        "docs/images/scene-logo.png",
+        "docs/index.md",
+        "docs/myst.yml",
+        "my_project/__init__.py",
+        "my_project/version.py",
+        "pyproject.toml",
+        "tests/test_version.py",
+    }
+    assert expected <= files_of(generate(tmp_path))
+
+
+def test_no_skeleton_naming_is_left_in_a_project(tmp_path):
+    skeleton = files_of(cli.SKELETON)
+    for marker in (cli.TEMPLATE_SUFFIX, cli.DOT_PREFIX, cli.PACKAGE_DIR):
+        assert any(marker in name for name in skeleton)
+    project = files_of(generate(tmp_path))
+    assert [
+        name for name in project if any(m in name for m in (cli.TEMPLATE_SUFFIX, cli.DOT_PREFIX, cli.PACKAGE_DIR))
+    ] == []
+
+
+def test_none_of_the_guidelines_site_is_copied(tmp_path):
+    assert (REPOSITORY / "docs" / "guides").is_dir()
+    assert (REPOSITORY / "docs" / "contributed-examples").is_dir()
+    project = files_of(generate(tmp_path))
+    assert [name for name in project if "guides/" in name or "contributed-examples" in name] == []
+
+
+def test_answers_reach_the_rendered_files(tmp_path):
+    dest = generate(
+        tmp_path,
+        "--name=scene-gaze",
+        "--package=gaze",
+        "--title=Gaze: tracking",
+        "--description=Eye tracking in freely moving animals.",
+        "--author=A. Person",
+        "--github=https://github.com/lab/scene-gaze/",
+    )
+    pyproject = (dest / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'name = "scene-gaze"' in pyproject
+    assert 'authors = [ { name = "A. Person" } ]' in pyproject
+    assert 'packages = [ "gaze" ]' in pyproject
+    assert 'version = { attr = "gaze.version.__version__" }' in pyproject
+    assert 'urls.Source = "https://github.com/lab/scene-gaze"' in pyproject
+    assert 'optional-dependencies.docs = [ "jupyter-book>=2" ]' in pyproject
+    myst = (dest / "docs" / "myst.yml").read_text(encoding="utf-8")
+    assert 'title: "Gaze: tracking"' in myst
+    assert "github: https://github.com/lab/scene-gaze\n" in myst
+    assert "import gaze\n" in (dest / "tests" / "test_version.py").read_text(encoding="utf-8")
+    assert (dest / "gaze" / "__init__.py").is_file()
+
+
+def test_the_rendered_pyproject_is_valid_toml(tmp_path):
+    tomllib = pytest.importorskip("tomllib")
+    pyproject = tomllib.loads((generate(tmp_path) / "pyproject.toml").read_text(encoding="utf-8"))
+    assert pyproject["project"]["name"] == "my-project"
+
+
+def test_github_actions_expressions_are_copied_verbatim(tmp_path):
+    docs = (generate(tmp_path) / ".github" / "workflows" / "docs.yml").read_text(encoding="utf-8")
+    assert "BASE_URL: /${{ github.event.repository.name }}" in docs
+
+
+def test_templates_use_only_the_values_the_generator_provides():
+    provided = ANSWERS | {key for backend in cli.BACKENDS.values() for key in backend if key != "label"}
+    used = set()
+    for path in cli.SKELETON.rglob(f"*{cli.TEMPLATE_SUFFIX}"):
+        template = Template(path.read_text(encoding="utf-8"))
+        for match in template.pattern.finditer(template.template):
+            assert match.group("invalid") is None, path
+            used.add(match.group("named") or match.group("braced"))
+    used.discard(None)
+    assert used
+    assert used <= provided
+
+
+def test_the_default_import_name_comes_from_the_folder_name(tmp_path):
+    dest = generate(tmp_path, folder="2-My.Project")
+    assert (dest / "my_project" / "__init__.py").is_file()
+
+
+def test_a_folder_name_with_spaces_and_accents_gives_a_valid_default_name(tmp_path):
+    dest = generate(tmp_path, folder="My Projét")
+    assert 'name = "My-Projet"' in (dest / "pyproject.toml").read_text(encoding="utf-8")
+    assert (dest / "my_projet" / "__init__.py").is_file()
+
+
+def test_a_github_url_ending_in_git_is_stored_without_it(tmp_path):
+    dest = generate(tmp_path, "--github=https://github.com/lab/proj.git/")
+    pyproject = (dest / "pyproject.toml").read_text(encoding="utf-8")
+    assert 'urls.Source = "https://github.com/lab/proj"' in pyproject
+    assert 'urls."Bug Tracker" = "https://github.com/lab/proj/issues"' in pyproject
+
+
+def test_text_files_are_written_with_lf_and_binary_files_byte_for_byte(tmp_path, monkeypatch):
+    skeleton = tmp_path / "skeleton"
+    (skeleton / "common").mkdir(parents=True)
+    (skeleton / "jupyter-book").mkdir()
+    (skeleton / "common" / "plain.txt").write_bytes(b"one\r\ntwo\r\n")
+    (skeleton / "common" / "rendered.txt.tmpl").write_bytes(b"$package\r\n")
+    png = b"\x89PNG\r\n\x1a\n\x00\x00\r\n"
+    (skeleton / "common" / "logo.png").write_bytes(png)
+    monkeypatch.setattr(cli, "SKELETON", skeleton)
+    dest = tmp_path / "out"
+    cli.generate(dest, {"package": "pkg"}, "jupyter-book")
+    assert (dest / "plain.txt").read_bytes() == b"one\ntwo\n"
+    assert (dest / "rendered.txt").read_bytes() == b"pkg\n"
+    assert (dest / "logo.png").read_bytes() == png
+
+
+def test_no_generated_text_file_has_crlf(tmp_path):
+    dest = generate(tmp_path)
+    texts = {path: cli.text_or_none(path.read_bytes()) for path in dest.rglob("*") if path.is_file()}
+    assert any(text is None for text in texts.values())  # the logo and favicon are binary
+    assert [path for path, text in texts.items() if text is not None and "\r" in text] == []
+
+
+def test_an_unwritable_destination_is_reported_without_a_traceback(tmp_path, capsys):
+    (tmp_path / "a-file").write_text("", encoding="utf-8")
+    with pytest.raises(SystemExit) as exit_info:
+        cli.main(["new", str(tmp_path / "a-file" / "proj"), "--yes", "--name=proj"])
+    assert exit_info.value.code == 1
+    assert "Traceback" not in capsys.readouterr().err
+
+
+def test_a_dry_run_lists_the_files_of_a_real_run_and_writes_nothing(tmp_path, capsys):
+    assert cli.main(["new", str(tmp_path / "dry"), "--yes", "--dry-run"]) == 0
+    assert not (tmp_path / "dry").exists()
+    listing = capsys.readouterr().out.split("Dry run:")[1]
+    listed = {line.strip() for line in listing.splitlines() if line.startswith("  ")}
+    assert listed == files_of(generate(tmp_path, folder="dry"))
+
+
+def test_a_non_empty_folder_is_refused(tmp_path):
+    dest = tmp_path / "taken"
+    dest.mkdir()
+    (dest / "keep.txt").write_text("kept", encoding="utf-8")
+    assert refused(tmp_path, folder="taken")
+    assert files_of(dest) == {"keep.txt"}
+
+
+@pytest.mark.parametrize("package", ["1project", "my-project", "MyProject", "class", "json", "tests", "docs"])
+def test_an_invalid_import_name_is_refused(tmp_path, package):
+    assert refused(tmp_path, f"--package={package}")
+    assert not (tmp_path / "my-project").exists()
+
+
+@pytest.mark.parametrize("title", ['A "quoted" title', "back\\slash", "", "bell\x07", "two\nlines"])
+def test_a_title_that_cannot_be_quoted_is_refused(tmp_path, title):
+    assert refused(tmp_path, f"--title={title}")
+
+
+def test_a_github_url_must_be_a_url(tmp_path):
+    assert refused(tmp_path, "--github=SCENE-Collaboration/my-project")
+
+
+def run(dest, *command):
+    # Run in the generated project's own environment, not this repository's.
+    env = {key: value for key, value in os.environ.items() if key not in ("VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT")}
+    subprocess.run(command, cwd=dest, env=env, check=True)
+
+
+@E2E
+def test_a_generated_project_installs_lints_and_passes_its_tests(tmp_path):
+    dest = generate(tmp_path)
+    run(dest, "uv", "lock")
+    run(dest, "uv", "sync", "--extra", "dev")
+    run(dest, "uv", "run", "pytest")
+    run(dest, "git", "init", "--quiet")
+    run(dest, "git", "add", "--all")
+    run(dest, "uv", "run", "pre-commit", "run", "--all-files", "--hook-stage", "manual")
+
+
+@E2E
+@pytest.mark.skipif(shutil.which("node") is None, reason="Jupyter Book needs Node.js")
+def test_a_generated_project_builds_its_docs(tmp_path):
+    dest = generate(tmp_path)
+    run(dest, "uv", "sync", "--extra", "docs")
+    run(dest / "docs", "uv", "run", "jupyter", "book", "build", "--html", "--strict")
