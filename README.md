@@ -2,9 +2,9 @@
 
 **Documentation: [scene-collaboration.github.io/CodeAndDocsTemplate](https://scene-collaboration.github.io/CodeAndDocsTemplate/)**
 
-This repository is the starting point for SCENE code projects: a template repository with packaging, formatting, tests, continuous integration and documentation already set up.
+This repository holds SCENE's code and data guidelines, and `scene-repo-template`, which creates new projects with packaging, formatting, tests, continuous integration and documentation already set up.
 
-SCENE's shared code lives in the [SCENE-Collaboration](https://github.com/SCENE-Collaboration) GitHub organisation. The template may be used for new repositories here or elsewhere in the consortium.
+SCENE's shared code lives in the [SCENE-Collaboration](https://github.com/SCENE-Collaboration) GitHub organisation. Generated projects may live there or elsewhere in the consortium.
 
 > [!NOTE]
 > **The project template will be added soon!** Please stay tuned until #1 merges.

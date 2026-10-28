@@ -1,44 +1,144 @@
 # Using this template
 
-Steps to start a new project from this repository, in order.
+`scene-repo-template` creates a new project with packaging, tests, CI and a documentation site already set up.
 
-## 1. Create your repository
+It works with uv, pip or conda; it needs Python 3.10 or later and [git](https://git-scm.com/downloads).
 
-On GitHub, click **Use this template** → **Create a new repository**. See GitHub's [guide to creating a repository from a template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template).
+## 1. Create the project
 
-## 2. Rename the package
+::::{tab-set}
 
-The template's package is called `placeholder`. Rename it everywhere:
+:::{tab-item} uv
 
-- the `placeholder/` folder;
-- `pyproject.toml`: `name` (the name people `pip install`), `packages`, and the `version` line under `[tool.setuptools.dynamic]`;
-- `placeholder/__init__.py` and `tests/test_version.py`, which import it.
+```bash
+uvx --from git+https://github.com/SCENE-Collaboration/CodeAndDocsTemplate scene-repo-template new my-project
+```
 
-Then update the links to this repository: `urls` in `pyproject.toml`, and `github` and `title` in `docs/myst.yml`.
+`uvx` runs the generator without installing it. See [installing uv](https://docs.astral.sh/uv/getting-started/installation/).
+:::
+
+:::{tab-item} pip
+In any Python environment:
+
+```bash
+pip install git+https://github.com/SCENE-Collaboration/CodeAndDocsTemplate
+scene-repo-template new my-project
+```
+
+:::
+
+:::{tab-item} conda
+The generator is installed with pip, into a conda environment of its own:
+
+```bash
+conda create -n scene-tools python pip
+conda activate scene-tools
+pip install git+https://github.com/SCENE-Collaboration/CodeAndDocsTemplate
+scene-repo-template new my-project
+```
+
+:::
+
+::::
+
+You will need to enter:
+- The distribution name (for `pip install`)
+- The import name
+- The project title
+- A one-line description
+- The author
+- The GitHub URL
+
+This will show a summary, and wait for confirmation.
+
+```{note}
+Use `--dry-run` for a preview.
+```
+
+
+The project then contains:
+
+- `pyproject.toml`, the package folder and a first test example in `tests/`;
+- `.pre-commit-config.yaml` and three GitHub Actions workflows: lint, tests and docs;
+- `docs/`, a Jupyter Book with SCENE's logo, colours and footer;
+- `LICENSE` (Apache-2.0) and a short `README.md`.
+
+## 2. Set up your environment
+
+In the new project, with your preferred package manager:
+
+::::{tab-set}
+
+:::{tab-item} uv
+
+```bash
+cd my-project
+git init
+uv sync --extra dev
+uv run pre-commit install
+uv run pytest
+```
+
+:::
+
+:::{tab-item} pip
+
+```bash
+cd my-project
+git init
+python3 -m venv .venv          # Windows: py -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -e ".[dev]"
+pre-commit install
+pytest
+```
+
+On Ubuntu and Debian, `python3 -m venv` needs the `python3-venv` package (`sudo apt install python3-venv`).
+
+:::
+
+:::{tab-item} conda
+
+```bash
+cd my-project
+git init
+conda create -n my-project python pip
+conda activate my-project
+pip install -e ".[dev]"
+pre-commit install
+pytest
+```
+
+Install packages that only exist on conda (or that you prefer from conda-forge) with `conda install`, before `pip install -e`.
+:::
+
+::::
+
+`pip install -e` installs the package in editable mode: changes to its code take effect without reinstalling.
+See *Code Formatting & Linting* in the [Guidelines](guidelines.md) for an explanation of the hooks.
 
 ## 3. Choose a license
 
-`LICENSE` and the `license` field in `pyproject.toml` must name the same license. The template uses Apache-2.0; if you change it, change both.
+`LICENSE` and the `license` field in `pyproject.toml` must point to the same license.
+Projects start with Apache-2.0; keep both in sync.
 
-## 4. Set up your environment
+## 4. Add your dependencies
 
-```bash
-uv sync --extra dev        # or: pip install -e ".[dev]"
-pre-commit install
-pre-commit run --all-files
+List them under `dependencies` in `pyproject.toml`, then reinstall (`uv sync --extra dev`, or `pip install -e ".[dev]"`).
+
+The `uv-lock` pre-commit hook writes `uv.lock` on every commit that changes `pyproject.toml`, also for pip and conda users.
+Commit `uv.lock` with the change.
+
+```{note}
+`uv.lock` covers only `pyproject.toml`: record conda-only packages in a separate lockfile, see *Lockfiles* in the [Guidelines](guidelines.md).
 ```
 
-*Code Formatting & Linting* in the [Guidelines](guidelines.md) explains what the hooks do.
+## 5. Turn on CI and the docs site
 
-## 5. Add your dependencies
+- Create the repository on GitHub at the URL you decided, then commit and push.
+- CI runs as soon as you push, if the repository is public and Actions is enabled (**Settings → Actions**): see *Continuous Integration* in the [Guidelines](guidelines.md).
+- To publish the docs, enable GitHub Pages once: see [Documentation with Jupyter Book](jupyter-book.md#publish).
 
-List them under `dependencies` in `pyproject.toml`, then run `uv lock` and commit `uv.lock` with the change. The `uv-lock` hook does this for you on commit.
-
-## 6. Turn on CI and the docs site
-
-- CI runs as soon as you push, but only if the repository is public: see *Continuous Integration* in the [Guidelines](guidelines.md).
-- To publish this book, enable GitHub Pages once: see [Documentation with Jupyter Book](jupyter-book.md#publish).
-
-## 7. Remove what you do not need
-
-Delete `docs/contributed-examples/` or the docs workflow (`.github/workflows/docs.yml`) if your project has no use for them, and replace the README with your own.
+```{important}
+No docs needed? Delete `docs/` and `.github/workflows/docs.yml`.
+```

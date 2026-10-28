@@ -14,7 +14,6 @@ from string import Template
 
 SKELETON = Path(__file__).parent / "skeleton"
 
-# Docs backends: the skeleton folder copied over `common/`, and the values its templates need.
 BACKENDS = {
     "jupyter-book": {
         "label": "Jupyter Book: guides and notebooks",
@@ -28,15 +27,15 @@ BACKENDS = {
     },
 }
 
-TEMPLATE_SUFFIX = ".tmpl"  # rendered with string.Template, then the suffix is dropped
+TEMPLATE_SUFFIX = ".tmpl"
 DOT_PREFIX = "dot-"  # dot-github -> .github: hidden files would be skipped by package-data globs
 PACKAGE_DIR = "__package__"  # renamed to the import name
 
 DIST_NAME = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$")
 PACKAGE = re.compile(r"^[a-z_][a-z0-9_]*$")
-# Folders every project already has; a package of the same name would merge into them.
+# Folders every project ships with
+# Otherwise a package of the same name would merge into them.
 RESERVED_PACKAGES = {"docs", "tests"}
-# Free text is written inside double-quoted TOML and YAML strings, which take neither these nor control characters.
 UNQUOTABLE = re.compile(r'["\\\x00-\x08\x0a-\x1f\x7f]')
 
 Check = Callable[[str], "str | None"]
