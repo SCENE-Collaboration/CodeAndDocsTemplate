@@ -1,4 +1,4 @@
-# Development guide
+# Working together
 
 Each project sets its own rules, such as who reviews what and how decisions are made.
 The guidelines below are a suggested common starting point.
