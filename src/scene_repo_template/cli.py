@@ -54,6 +54,14 @@ def gitignored_names() -> frozenset[str]:
     return frozenset(name for line in lines if PACKAGE.fullmatch(name := line.strip().strip("/")))
 
 
+@functools.cache
+def dev_tool_names() -> frozenset[str]:
+    """Import names of the generated project's dev extra (pytest, pre_commit, ...), read from its pyproject."""
+    text = (SKELETON / "common" / f"pyproject.toml{TEMPLATE_SUFFIX}").read_text(encoding="utf-8")
+    dev = re.search(r"^optional-dependencies\.dev = \[(.*)\]$", text, re.MULTILINE).group(1)
+    return frozenset(re.sub(r"[-.]", "_", name.lower()) for name in re.findall(r'"([A-Za-z0-9._-]+)', dev))
+
+
 def check_dist_name(value: str) -> str | None:
     if not DIST_NAME.fullmatch(value):
         return "use letters, digits, '-', '_' or '.', starting and ending with a letter or digit"
@@ -69,6 +77,8 @@ def check_package(value: str) -> str | None:
         return f"{value}/ is already a folder of the project"
     if value in gitignored_names():
         return f"{value}/ is in the project's .gitignore, so the code would not be committed"
+    if value in dev_tool_names():
+        return f"{value} is one of the project's dev tools; a package of that name would shadow it"
     return None
 
 

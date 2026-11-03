@@ -1,6 +1,9 @@
+import importlib
+import importlib.metadata
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 from string import Template
 
@@ -93,7 +96,7 @@ def test_answers_reach_the_rendered_files(tmp_path):
     myst = (dest / "docs" / "myst.yml").read_text(encoding="utf-8")
     assert 'title: "Gaze: tracking"' in myst
     assert "github: https://github.com/lab/scene-gaze\n" in myst
-    assert "import gaze\n" in (dest / "tests" / "test_version.py").read_text(encoding="utf-8")
+    assert 'importlib.import_module("gaze")' in (dest / "tests" / "test_version.py").read_text(encoding="utf-8")
     assert (dest / "gaze" / "__init__.py").is_file()
 
 
@@ -188,11 +191,29 @@ def test_a_non_empty_folder_is_refused(tmp_path):
 
 @pytest.mark.parametrize(
     "package",
-    ["1project", "my-project", "MyProject", "class", "json", "tests", "docs", "lib", "build", "env", "my_project\n"],
+    [
+        *["1project", "my-project", "MyProject", "class", "json", "tests", "docs", "lib", "build", "env"],
+        *["my_project\n", "pytest", "pre_commit"],
+    ],
 )
 def test_an_invalid_import_name_is_refused(tmp_path, package):
     assert refused(tmp_path, f"--package={package}")
     assert not (tmp_path / "my-project").exists()
+
+
+@pytest.mark.parametrize("package", ["version", "set", "distribution"])
+def test_the_generated_version_test_passes_whatever_the_import_name(tmp_path, monkeypatch, package):
+    dest = generate(tmp_path, f"--package={package}")
+    monkeypatch.syspath_prepend(str(dest))
+    # Stand-ins for the installed metadata: what is at stake is the names the generated test binds.
+    monkeypatch.setattr(importlib.metadata, "packages_distributions", lambda: {package: ["my-project"]})
+    monkeypatch.setattr(importlib.metadata, "version", lambda _: importlib.import_module(package).__version__)
+    namespace = {}
+    try:
+        exec((dest / "tests" / "test_version.py").read_text(encoding="utf-8"), namespace)
+        namespace["test_installed_version_matches_package_version"]()
+    finally:
+        sys.modules.pop(package, None)
 
 
 def test_a_distribution_name_with_a_trailing_newline_is_refused(tmp_path):

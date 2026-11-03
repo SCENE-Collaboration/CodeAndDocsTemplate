@@ -1,8 +1,9 @@
-from importlib.metadata import packages_distributions, version
-
-import $package
+import importlib
+import importlib.metadata
 
 
 def test_installed_version_matches_package_version():
-    (distribution,) = set(packages_distributions()["$package"])
-    assert version(distribution) == $package.__version__
+    # import_module binds no name, so no import name can shadow the ones used here.
+    package = importlib.import_module("$package")
+    (distribution,) = set(importlib.metadata.packages_distributions()["$package"])
+    assert importlib.metadata.version(distribution) == package.__version__
