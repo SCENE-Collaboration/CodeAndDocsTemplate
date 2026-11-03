@@ -1,15 +1,17 @@
 # SCENE Code & Data Guidelines
 
+**Documentation: [scene-collaboration.github.io/CodeAndDocsTemplate](https://scene-collaboration.github.io/CodeAndDocsTemplate/)**
+
 This repository is the starting point for SCENE code projects: a template repository with packaging, formatting, tests, continuous integration and documentation already set up.
 
 SCENE's shared code lives in the [SCENE-Collaboration](https://github.com/SCENE-Collaboration) GitHub organisation. The template may be used for new repositories here or elsewhere in the consortium.
 
-> **Starting a new project?** Follow [Using this template](docs/guides/using-the-template.md), step by step.
+> **Starting a new project?** Follow [Using this template](https://scene-collaboration.github.io/CodeAndDocsTemplate/using-the-template/), step by step.
 
-- [Project standards](docs/guides/guidelines.md): project layout, formatting and linting, CI, lockfiles, containers and DataJoint.
-- [Collaborating on code](docs/guides/development-guide.md): Git workflow, code style, issues, pull requests and code review.
-- [Documentation with Jupyter Book](docs/guides/jupyter-book.md), built from [`docs/`](docs/) and published to GitHub Pages.
-- [Contributed examples](docs/contributed-examples/contributed-examples.md) from SCENE labs.
+- [Project standards](https://scene-collaboration.github.io/CodeAndDocsTemplate/guidelines/): project layout, formatting and linting, CI, lockfiles, containers and DataJoint.
+- [Collaborating on code](https://scene-collaboration.github.io/CodeAndDocsTemplate/development-guide/): Git workflow, code style, issues, pull requests and code review.
+- [Documentation with Jupyter Book](https://scene-collaboration.github.io/CodeAndDocsTemplate/jupyter-book/), built from [`docs/`](docs/) and published to GitHub Pages.
+- [Contributed examples](https://scene-collaboration.github.io/CodeAndDocsTemplate/contributed-examples/) from SCENE labs.
 
 Suggestions and contributions are welcome: please open an issue or a pull request!
 
