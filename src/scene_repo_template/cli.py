@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import functools
 import keyword
 import re
 import subprocess
@@ -31,8 +32,9 @@ TEMPLATE_SUFFIX = ".tmpl"
 DOT_PREFIX = "dot-"  # dot-github -> .github: hidden files would be skipped by package-data globs
 PACKAGE_DIR = "__package__"  # renamed to the import name
 
-DIST_NAME = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$")
-PACKAGE = re.compile(r"^[a-z_][a-z0-9_]*$")
+# Used with fullmatch: `$` would accept a trailing newline
+DIST_NAME = re.compile(r"[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?")
+PACKAGE = re.compile(r"[a-z_][a-z0-9_]*")
 # Folders every project ships with
 # Otherwise a package of the same name would merge into them.
 RESERVED_PACKAGES = {"docs", "tests"}
@@ -45,19 +47,28 @@ class ProjectError(ValueError):
     """Invalid or missing answer."""
 
 
+@functools.cache
+def gitignored_names() -> frozenset[str]:
+    """Import names the generated .gitignore excludes as folders (build/, lib/, env/, ...)."""
+    lines = (SKELETON / "common" / f"{DOT_PREFIX}gitignore").read_text(encoding="utf-8").splitlines()
+    return frozenset(name for line in lines if PACKAGE.fullmatch(name := line.strip().strip("/")))
+
+
 def check_dist_name(value: str) -> str | None:
-    if not DIST_NAME.match(value):
+    if not DIST_NAME.fullmatch(value):
         return "use letters, digits, '-', '_' or '.', starting and ending with a letter or digit"
     return None
 
 
 def check_package(value: str) -> str | None:
-    if not PACKAGE.match(value) or keyword.iskeyword(value):
+    if not PACKAGE.fullmatch(value) or keyword.iskeyword(value):
         return "use a lowercase Python identifier, e.g. my_project"
     if value in sys.stdlib_module_names:
         return f"{value} is a standard-library module; importing it would not reach your package"
     if value in RESERVED_PACKAGES:
         return f"{value}/ is already a folder of the project"
+    if value in gitignored_names():
+        return f"{value}/ is in the project's .gitignore, so the code would not be committed"
     return None
 
 

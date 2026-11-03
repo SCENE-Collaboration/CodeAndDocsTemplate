@@ -186,10 +186,23 @@ def test_a_non_empty_folder_is_refused(tmp_path):
     assert files_of(dest) == {"keep.txt"}
 
 
-@pytest.mark.parametrize("package", ["1project", "my-project", "MyProject", "class", "json", "tests", "docs"])
+@pytest.mark.parametrize(
+    "package",
+    ["1project", "my-project", "MyProject", "class", "json", "tests", "docs", "lib", "build", "env", "my_project\n"],
+)
 def test_an_invalid_import_name_is_refused(tmp_path, package):
     assert refused(tmp_path, f"--package={package}")
     assert not (tmp_path / "my-project").exists()
+
+
+def test_a_distribution_name_with_a_trailing_newline_is_refused(tmp_path):
+    # Title and URL given, else their defaults (built from the name) would be what refuses the newline.
+    assert refused(tmp_path, "--name=my-project\n", "--title=My project", "--github=https://github.com/x/my-project")
+
+
+def test_a_folder_named_like_an_ignored_folder_gets_a_committable_default_import_name(tmp_path):
+    dest = generate(tmp_path, folder="build")
+    assert (dest / "project" / "__init__.py").is_file()
 
 
 @pytest.mark.parametrize("title", ['A "quoted" title', "back\\slash", "", "bell\x07", "two\nlines"])
