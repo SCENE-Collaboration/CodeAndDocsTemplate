@@ -32,7 +32,7 @@ BACKENDS = {
         # MkDocs 2.0 drops the plugin system mkdocstrings relies on.
         "docs_dependencies": (
             '"mkdocs>=1.6,<2", "mkdocs-api-autonav>=0.1", "mkdocs-autorefs>=1.2", "mkdocs-material>=9.5", '
-            '"mkdocstrings[python]>=0.27"'
+            '"mkdocstrings[python]>=0.27", "pymdown-extensions<12.2; python_version < \'3.11\'"'
         ),
         "docs_readme": (
             "Built from `docs/` and `mkdocs.yml` with [MkDocs](https://www.mkdocs.org) and Material, "
