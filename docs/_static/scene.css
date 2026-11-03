@@ -1,0 +1,206 @@
+/* SCENE theme for the Jupyter Book. Colours: scene-palette.json, next to this file; keep both in sync. */
+
+:root {
+  --scene-petrol-blue: #125069;
+  --scene-ocean-blue: #12638e;
+  --scene-cyan: #41cfdb;
+  --scene-teal-green: #31c5a1;
+  --scene-leaf-green: #80c848;
+  --scene-burnt-orange: #d76c26;
+  --scene-orange: #e98724;
+  --scene-golden-yellow: #edb71f;
+  --scene-ink: #1f2d36;
+  --scene-slate: #6b7b85;
+  --scene-mist: #f2f6f8;
+
+  --scene-heading: var(--scene-petrol-blue);
+  --scene-top-bar: var(--scene-petrol-blue);
+  --scene-stripe: linear-gradient(
+    90deg,
+    var(--scene-cyan),
+    var(--scene-teal-green),
+    var(--scene-leaf-green),
+    var(--scene-golden-yellow),
+    var(--scene-orange),
+    var(--scene-burnt-orange)
+  );
+
+  /* Theme variables (myst-theme): brand colour for links, buttons and the active page only. */
+  --myst-color-primary: var(--scene-ocean-blue);
+  --myst-color-primary-hover: var(--scene-petrol-blue);
+  --myst-color-link: var(--scene-ocean-blue);
+  --myst-color-link-hover: var(--scene-petrol-blue);
+  --myst-color-link-underline: var(--scene-cyan);
+  --myst-color-active: var(--scene-ocean-blue);
+  --myst-color-active-bg: rgb(65 207 219 / 15%);
+}
+
+.dark {
+  --scene-heading: var(--scene-cyan);
+  --scene-top-bar: var(--scene-ink);
+
+  --myst-color-primary: var(--scene-cyan);
+  --myst-color-primary-hover: var(--scene-teal-green);
+  --myst-color-link: var(--scene-cyan);
+  --myst-color-link-hover: var(--scene-teal-green);
+  --myst-color-link-underline: var(--scene-teal-green);
+  --myst-color-active: var(--scene-cyan);
+  --myst-color-active-bg: rgb(65 207 219 / 20%);
+}
+
+/* Brand stripe along the top of every page, in the logo's colours. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: 4px;
+  background: var(--scene-stripe);
+  z-index: 100;
+}
+
+.myst-fm-block-title,
+.article {
+  --tw-prose-headings: var(--scene-heading);
+}
+
+.myst-fm-block-title {
+  color: var(--scene-heading);
+}
+
+.article h2 {
+  padding-bottom: 0.25em;
+  border-bottom: 2px solid var(--scene-cyan);
+}
+
+/* Top bar: SCENE colour in both modes, white controls on it. */
+/* Frosted glass: the bar is slightly translucent and blurs the page scrolling under it. */
+div.myst-top-nav {
+  background-color: color-mix(in srgb, var(--scene-top-bar) 82%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+}
+
+div.myst-top-nav .myst-home-link,
+div.myst-top-nav .myst-top-nav-menu-button,
+div.myst-top-nav .myst-theme-button,
+div.myst-top-nav .myst-search-bar,
+div.myst-top-nav .myst-search-shortcut {
+  color: #fff;
+}
+
+div.myst-top-nav .myst-search-bar,
+div.myst-top-nav .myst-theme-button {
+  background-color: rgb(255 255 255 / 12%);
+  border-color: rgb(255 255 255 / 40%);
+}
+
+/* Footer block in place of the "Made with MyST" badge: docs/_static/footer.md.
+   A small copy of the top bar: its colour, with the brand stripe along the top edge. */
+.scene-footer {
+  position: relative;
+  overflow: hidden;
+  padding: 0.9rem 0.5rem 0.6rem;
+  border-radius: 6px;
+  background: var(--scene-top-bar);
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: rgb(255 255 255 / 75%);
+}
+
+.scene-footer p {
+  margin: 0.15rem 0;
+}
+
+.scene-footer strong {
+  color: #fff;
+}
+
+.scene-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--scene-stripe);
+}
+
+.scene-footer img {
+  margin: 0.35rem auto 0;
+}
+
+/* Name: one cycle after load. .scene-rest wraps every letter but the initials; .scene-line holds "NEuroscience",
+   so nothing rewraps. Letters shrink, the halves part sideways, then meet vertically as "SCENE"; reverse to expand.
+   Offsets from bold italic widths SCE 1.70em, NE 1.33em (Segoe UI). */
+.scene-footer p:has(.scene-rest) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.8em;
+}
+
+.scene-line {
+  display: block;
+}
+
+/* Initials in stripe order, golden yellow skipped. */
+.scene-initial {
+  font-weight: bold;
+  color: var(--scene-initial);
+}
+
+.scene-initial:nth-child(1 of .scene-initial) { --scene-initial: var(--scene-cyan); }
+.scene-initial:nth-child(2 of .scene-initial) { --scene-initial: var(--scene-teal-green); }
+.scene-initial:nth-child(3 of .scene-initial) { --scene-initial: var(--scene-leaf-green); }
+.scene-line > .scene-initial:nth-child(1 of .scene-initial) { --scene-initial: var(--scene-orange); }
+.scene-line > .scene-initial:nth-child(2 of .scene-initial) { --scene-initial: var(--scene-burnt-orange); }
+
+.scene-rest,
+.scene-line,
+.scene-footer p:has(.scene-rest) > em {
+  animation-duration: 4s;
+  animation-delay: 1s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 1;
+}
+
+.scene-rest {
+  animation-name: scene-rest;
+}
+
+.scene-line {
+  animation-name: scene-line;
+}
+
+.scene-footer p:has(.scene-rest) > em {
+  animation-name: scene-name;
+}
+
+@keyframes scene-rest {
+  20%,
+  80% {
+    font-size: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes scene-line {
+  0%, 20% { transform: none; }
+  27%, 73% { transform: translate(1.515em, 0); }
+  35%, 65% { transform: translate(1.515em, -1.4em); }
+  80%, 100% { transform: none; }
+}
+
+@keyframes scene-name {
+  0%, 20% { transform: none; }
+  27%, 73% { transform: translate(-0.665em, 0); }
+  35%, 65% { transform: translate(-0.665em, 0.7em); }
+  80%, 100% { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-rest,
+  .scene-line,
+  .scene-footer p:has(.scene-rest) > em {
+    animation: none;
+  }
+}

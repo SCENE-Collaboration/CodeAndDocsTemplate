@@ -1,0 +1,34 @@
+# Jupyter Book 2 configuration: https://jupyterbook.org
+# Preview locally with `jupyter book start`; build with `jupyter book build --html`.
+version: 1
+project:
+  title: SCENE Code & Data Guidelines
+  description: Template and guidelines for SCENE code projects.
+  github: https://github.com/SCENE-Collaboration/CodeAndDocsTemplate
+  license: Apache-2.0
+  toc:
+    - file: index.md
+    - title: Development guides
+      children:
+        - file: guides/using-the-template.md
+        - file: guides/guidelines.md
+        - file: guides/development-guide.md
+    - title: Documentation
+      children:
+        - file: guides/jupyter-book.md
+        - file: contributed-examples/contributed-examples.md
+          children:
+            - title: MLAI - Benquet, Sainsbury et al. 2026
+              children:
+                - file: contributed-examples/MLAI/figure-5-kinematics.ipynb
+                - file: contributed-examples/MLAI/datajoint-architecture.md
+
+site:
+  template: book-theme
+  options:
+    logo: images/scene-logo.png
+    logo_text: SCENE
+    favicon: images/favicon.png
+    style: _static/scene.css
+  parts:
+    primary_sidebar_footer: _static/footer.md

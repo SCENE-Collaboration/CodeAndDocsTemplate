@@ -1,0 +1,23 @@
+{
+  "source": "SCENE presentation template v1, slide 11 (brand colours) and slide layout (text colours)",
+  "brand": {
+    "petrol-blue": "#125069",
+    "ocean-blue": "#12638E",
+    "cyan": "#41CFDB",
+    "teal-green": "#31C5A1",
+    "leaf-green": "#80C848",
+    "burnt-orange": "#D76C26",
+    "orange": "#E98724",
+    "golden-yellow": "#EDB71F"
+  },
+  "text": {
+    "ink": "#1F2D36",
+    "slate": "#6B7B85",
+    "mist": "#F2F6F8"
+  },
+  "roles": {
+    "title": "petrol-blue",
+    "body": "ink",
+    "muted": "slate"
+  }
+}
