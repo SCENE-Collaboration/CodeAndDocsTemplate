@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+import types
 from pathlib import Path
 from string import Template
 
@@ -179,6 +180,47 @@ def test_a_dry_run_lists_the_files_of_a_real_run_and_writes_nothing(tmp_path, ca
     listing = capsys.readouterr().out.split("Dry run:")[1]
     listed = {line.strip() for line in listing.splitlines() if line.startswith("  ")}
     assert listed == files_of(generate(tmp_path, folder="dry"))
+
+
+class Prompts:
+    """Stands in for questionary: every question is answered with its default, as if by pressing Enter."""
+
+    def __init__(self):
+        self.asked = []
+
+    def text(self, question, default="", validate=None):
+        self.asked.append((question, default))
+        return types.SimpleNamespace(ask=lambda: default)
+
+    def confirm(self, question, default=True):
+        self.asked.append((question, default))
+        return types.SimpleNamespace(ask=lambda: default)
+
+    def select(self, question, choices):
+        self.asked.append((question, choices[0].value))
+        return types.SimpleNamespace(ask=lambda: choices[0].value)
+
+    def Choice(self, title, value):
+        return types.SimpleNamespace(title=title, value=value)
+
+
+@pytest.fixture
+def prompts(monkeypatch):
+    fake = Prompts()
+    monkeypatch.setitem(sys.modules, "questionary", fake)
+    return fake
+
+
+def test_an_interactive_dry_run_does_not_ask_to_create(tmp_path, prompts):
+    assert cli.main(["new", str(tmp_path / "dry"), "--dry-run"]) == 0
+    assert "Create it?" not in [question for question, _ in prompts.asked]
+    assert not (tmp_path / "dry").exists()
+
+
+def test_an_invalid_option_is_asked_again_interactively(tmp_path, prompts, capsys):
+    cli.main(["new", str(tmp_path / "proj"), "--package=json", "--dry-run"])
+    assert ("Import name", "json") in prompts.asked
+    assert "Import name: json is a standard-library module" in capsys.readouterr().err
 
 
 def test_a_non_empty_folder_is_refused(tmp_path):

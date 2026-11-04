@@ -119,8 +119,12 @@ See *Code Formatting & Linting* in the [Project standards](guidelines.md) for an
 
 ## 3. Choose a license
 
-`LICENSE` and the `license` field in `pyproject.toml` must point to the same license.
-Projects start with Apache-2.0; keep both in sync.
+Projects start with Apache-2.0.
+To change it, replace `LICENSE` and update every place that names the license:
+
+- the `license` field in `pyproject.toml`;
+- the *License* section of `README.md`;
+- `license` in `docs/myst.yml`.
 
 ## 4. Add your dependencies
 

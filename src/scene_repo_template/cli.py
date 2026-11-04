@@ -203,11 +203,18 @@ def generate(dest: Path, values: dict[str, str], backend: str, dry_run: bool = F
 
 
 def resolve(question: str, given: str | None, default: str | None, check: Check, interactive: bool) -> str:
-    """Return the option given on the command line, else ask, else (with --yes) the default."""
-    if given is None and interactive:
+    """Return the option given on the command line, else ask, else (with --yes) the default.
+
+    Interactively, an invalid option is reported and asked again, starting from what was given.
+    """
+    error = check(given) if given is not None else None
+    if interactive and (given is None or error):
         import questionary
 
-        answer = questionary.text(question, default=default or "", validate=lambda v: check(v) or True).ask()
+        if error:
+            print(f"{question}: {error}", file=sys.stderr)
+        start = given if given is not None else default or ""
+        answer = questionary.text(question, default=start, validate=lambda v: check(v) or True).ask()
         if answer is None:
             raise KeyboardInterrupt
         return answer
@@ -262,7 +269,7 @@ def new_project(args: argparse.Namespace) -> int:
     print(f"\nProject in {dest}:")
     for key, value in {**values, "docs": backend}.items():
         print(f"  {key:<12} {value}")
-    if interactive:
+    if interactive and not args.dry_run:
         import questionary
 
         if not questionary.confirm("Create it?", default=True).ask():
@@ -281,7 +288,10 @@ def new_project(args: argparse.Namespace) -> int:
     print(
         '  with pip or conda:    pip install -e ".[dev]" in an activated environment, then pre-commit install and pytest'
     )
-    print("  see Using this template in the SCENE guidelines for each step")
+    print(
+        "  see Using this template in the SCENE guidelines for each step: "
+        "https://scene-collaboration.github.io/CodeAndDocsTemplate/using-the-template/"
+    )
     print(f"then create {values['github_url']} on GitHub, commit and push.")
     return 0
 
@@ -312,7 +322,7 @@ def main(argv: list[str] | None = None) -> int:
     except OSError as error:
         parser.exit(1, f"scene-repo-template: error: {error}\nFiles written before the error are left in place.\n")
     except KeyboardInterrupt:
-        print("\nCancelled; nothing written.", file=sys.stderr)
+        print("\nCancelled.", file=sys.stderr)
         return 1
 
 
