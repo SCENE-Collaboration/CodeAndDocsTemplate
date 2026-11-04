@@ -10,7 +10,7 @@ title: SCENE Code & Data Guidelines
 
 Shared practices for code and data in [SCENE](https://www.project-scene.org/), the Simons Collaboration on Ecological Neuroscience, and a template repository for quick project setup.
 
-See the [SCENE-Collaboration](https://github.com/SCENE-Collaboration) GitHub organisation for more other repositories and resources.
+See the [SCENE-Collaboration](https://github.com/SCENE-Collaboration) GitHub organisation for other repositories and resources.
 
 ::::{grid} 1 1 2 2
 
