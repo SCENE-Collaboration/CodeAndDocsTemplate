@@ -6,8 +6,10 @@ project:
   description: "$description"
   github: $github_url
   license: Apache-2.0
-  toc:
-    - file: index.md
+  # No `toc:`: every page in docs/ is built and listed, in alphabetical order. Add a `toc:` to set the order.
+  # _static/ holds parts of the theme (the footer), not pages.
+  exclude:
+    - _static/**
 
 site:
   template: book-theme
