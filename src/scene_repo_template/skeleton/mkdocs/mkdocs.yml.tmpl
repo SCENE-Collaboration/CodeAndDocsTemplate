@@ -58,6 +58,10 @@ plugins:
           inventories:
             - url: https://docs.python.org/3/objects.inv
               domains: [py, std]
+  # Notebooks (.ipynb) are pages, shown with the outputs saved in them, not re-executed.
+  # Only notebooks: by default, .py files in docs/ would become pages too.
+  - mkdocs-jupyter:
+      include: ["*.ipynb"]
 
 markdown_extensions:
   - attr_list

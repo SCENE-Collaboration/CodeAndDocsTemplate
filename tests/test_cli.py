@@ -1,5 +1,6 @@
 import importlib
 import importlib.metadata
+import json
 import os
 import shutil
 import subprocess
@@ -80,6 +81,7 @@ def test_the_backends_ship_the_same_logo_and_favicon():
 def test_the_docs_extra_follows_the_backend(tmp_path):
     pyproject = (generate(tmp_path, "--docs=mkdocs") / "pyproject.toml").read_text(encoding="utf-8")
     assert '"mkdocstrings[python]>=0.27"' in pyproject
+    assert '"mkdocs-jupyter>=0.25"' in pyproject
     assert "jupyter-book" not in pyproject
 
 
@@ -333,8 +335,14 @@ def test_a_generated_jupyter_book_builds(tmp_path):
 
 
 @E2E
-def test_a_generated_mkdocs_site_builds_with_an_api_page_per_module(tmp_path):
+def test_a_generated_mkdocs_site_builds_with_an_api_page_per_module_and_a_notebook(tmp_path):
     dest = generate(tmp_path, "--docs=mkdocs")
+    notebook = {"cells": [{"cell_type": "markdown", "metadata": {}, "source": ["# Analysis"]}], "metadata": {}}
+    notebook |= {"nbformat": 4, "nbformat_minor": 5}
+    (dest / "docs" / "analysis.ipynb").write_text(json.dumps(notebook), encoding="utf-8")
+    mkdocs_yml = dest / "mkdocs.yml"
+    mkdocs_yml.write_text(mkdocs_yml.read_text(encoding="utf-8") + "  - analysis.ipynb\n", encoding="utf-8")
     run(dest, "uv", "sync", "--extra", "docs")
     run(dest, "uv", "run", "mkdocs", "build", "--strict")
     assert (dest / "site" / "reference" / "my_project" / "version" / "index.html").is_file()
+    assert (dest / "site" / "analysis" / "index.html").is_file()

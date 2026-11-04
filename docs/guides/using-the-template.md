@@ -48,7 +48,7 @@ You will need to enter:
 - A one-line description
 - The author
 - The GitHub URL
-- The documentation: Jupyter Book (guides and notebooks) or MkDocs (API reference from docstrings)
+- The documentation: Jupyter Book (guides and notebooks) or MkDocs (API reference from docstrings and notebooks)
 
 This will show a summary, and wait for confirmation.
 
