@@ -48,6 +48,7 @@ You will need to enter:
 - A one-line description
 - The author
 - The GitHub URL
+- The license: Apache-2.0, MIT or BSD-3-Clause (for others, see *3. Choose a license* below)
 - The documentation: Jupyter Book (guides and notebooks) or MkDocs (API reference from docstrings and notebooks)
 
 This will show a summary, and wait for confirmation.
@@ -62,7 +63,7 @@ The project then contains:
 - `pyproject.toml`, the package folder and a first test example in `tests/`;
 - `.pre-commit-config.yaml` and three GitHub Actions workflows: lint, tests and docs;
 - `docs/`, a Jupyter Book, or an MkDocs site with `mkdocs.yml`;
-- `LICENSE` (Apache-2.0) and a short `README.md`.
+- `LICENSE` and a short `README.md`.
 
 ### Which documentation backend?
 
@@ -131,12 +132,14 @@ See *Code Formatting & Linting* in the [Project standards](guidelines.md) for an
 
 ## 3. Choose a license
 
-Projects start with Apache-2.0.
-To change it, replace `LICENSE` and update every place that names the license:
+The template supports Apache-2.0 (the default), MIT or BSD-3-Clause, or `--license`.
+For MIT and BSD-3-Clause, `LICENSE` starts with the year and the author as copyright holder; check that this is right.
+
+To change it later, or to use another license, replace `LICENSE` (see [choosealicense.com](https://choosealicense.com)) and update:
 
 - the `license` field in `pyproject.toml`;
 - the *License* section of `README.md`;
-- `license` in `docs/myst.yml`.
+- with Jupyter Book, `license` in `docs/myst.yml`.
 
 ## 4. Add your dependencies
 

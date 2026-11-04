@@ -1,3 +1,4 @@
+import datetime
 import importlib
 import importlib.metadata
 import json
@@ -14,7 +15,7 @@ import pytest
 from scene_repo_template import cli
 
 REPOSITORY = Path(__file__).parents[1]
-ANSWERS = {"dist_name", "package", "title", "description", "author", "github_url"}
+ANSWERS = {"dist_name", "package", "title", "description", "author", "github_url", "license", "year"}
 
 # Installing and building a generated project needs uv, Node.js and the network; CI sets this variable.
 E2E = pytest.mark.skipif(
@@ -76,6 +77,31 @@ def test_the_backends_ship_the_same_logo_and_favicon():
     for image in ("scene-logo.png", "favicon.png"):
         copies = {(cli.SKELETON / backend / "docs" / "images" / image).read_bytes() for backend in cli.BACKENDS}
         assert len(copies) == 1, image
+
+
+def test_every_license_has_its_text():
+    assert {path.name for path in (cli.SKELETON / "licenses").iterdir()} == set(cli.LICENSES)
+
+
+@pytest.mark.parametrize("license", cli.LICENSES)
+def test_the_license_reaches_every_file_that_names_it(tmp_path, license):
+    dest = generate(tmp_path, f"--license={license}", "--author=A. Person")
+    assert f'license = "{license}"' in (dest / "pyproject.toml").read_text(encoding="utf-8")
+    assert f"{license}: see `LICENSE`." in (dest / "README.md").read_text(encoding="utf-8")
+    assert f"license: {license}\n" in (dest / "docs" / "myst.yml").read_text(encoding="utf-8")
+    text = (dest / "LICENSE").read_text(encoding="utf-8")
+    # Apache-2.0 has no copyright line to fill; the others start with one.
+    if license != "Apache-2.0":
+        assert f"{datetime.date.today().year}" in text.splitlines()[2]
+        assert "A. Person" in text.splitlines()[2]
+
+
+def test_the_default_license_is_apache(tmp_path):
+    assert "Apache License" in (generate(tmp_path) / "LICENSE").read_text(encoding="utf-8")
+
+
+def test_an_unknown_license_is_refused(tmp_path):
+    assert refused(tmp_path, "--license=GPL-3.0")
 
 
 def test_the_docs_extra_follows_the_backend(tmp_path):
@@ -172,13 +198,14 @@ def test_text_files_are_written_with_lf_and_binary_files_byte_for_byte(tmp_path,
     skeleton = tmp_path / "skeleton"
     (skeleton / "common").mkdir(parents=True)
     (skeleton / "jupyter-book").mkdir()
+    (skeleton / "licenses" / "MIT").mkdir(parents=True)
     (skeleton / "common" / "plain.txt").write_bytes(b"one\r\ntwo\r\n")
     (skeleton / "common" / "rendered.txt.tmpl").write_bytes(b"$package\r\n")
     png = b"\x89PNG\r\n\x1a\n\x00\x00\r\n"
     (skeleton / "common" / "logo.png").write_bytes(png)
     monkeypatch.setattr(cli, "SKELETON", skeleton)
     dest = tmp_path / "out"
-    cli.generate(dest, {"package": "pkg"}, "jupyter-book")
+    cli.generate(dest, {"package": "pkg", "license": "MIT"}, "jupyter-book")
     assert (dest / "plain.txt").read_bytes() == b"one\ntwo\n"
     assert (dest / "rendered.txt").read_bytes() == b"pkg\n"
     assert (dest / "logo.png").read_bytes() == png

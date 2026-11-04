@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 import functools
 import keyword
 import re
@@ -43,6 +44,13 @@ BACKENDS = {
     },
 }
 
+LICENSES = {
+    "Apache-2.0": "Apache-2.0: permissive, with a patent grant",
+    "MIT": "MIT: short and permissive",
+    "BSD-3-Clause": "BSD-3-Clause: permissive, and your name may not be used to promote derived work",
+}
+OTHER_LICENSES = "others: https://choosealicense.com, then swap LICENSE in by hand (see Using this template)"
+
 TEMPLATE_SUFFIX = ".tmpl"
 DOT_PREFIX = "dot-"  # dot-github -> .github: hidden files would be skipped by package-data globs
 PACKAGE_DIR = "__package__"  # renamed to the import name
@@ -50,7 +58,7 @@ PACKAGE_DIR = "__package__"  # renamed to the import name
 # Used with fullmatch: `$` would accept a trailing newline
 DIST_NAME = re.compile(r"[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?")
 PACKAGE = re.compile(r"[a-z_][a-z0-9_]*")
-# Folders every project ships with
+# Folders shipped by default in every project
 # Otherwise a package of the same name would merge into them.
 RESERVED_PACKAGES = {"docs", "tests"}
 UNQUOTABLE = re.compile(r'["\\\x00-\x08\x0a-\x1f\x7f]')
@@ -186,7 +194,7 @@ def text_or_none(data: bytes) -> str | None:
 
 
 def generate(dest: Path, values: dict[str, str], backend: str, dry_run: bool = False) -> list[Path]:
-    """Copy `common/`, then the backend's folder, into `dest`; render `.tmpl` files with `values`.
+    """Copy `common/`, the backend's folder and the license's, into `dest`; render `.tmpl` files with `values`.
 
     Text files are written with LF line endings, whatever checkout the skeleton was installed from; binary files are
     copied byte for byte. With `dry_run`, templates are still rendered, so missing values fail the same way, but
@@ -194,7 +202,7 @@ def generate(dest: Path, values: dict[str, str], backend: str, dry_run: bool = F
     """
     variables = {**values, **{key: value for key, value in BACKENDS[backend].items() if key != "label"}}
     written = []
-    for layer in ("common", backend):
+    for layer in ("common", backend, f"licenses/{values['license']}"):
         root = SKELETON / layer
         for source in sorted(root.rglob("*")):
             relative = source.relative_to(root)
@@ -241,13 +249,14 @@ def resolve(question: str, given: str | None, default: str | None, check: Check,
     return value
 
 
-def resolve_backend(given: str | None, interactive: bool) -> str:
-    if given is not None or not interactive or len(BACKENDS) == 1:
-        return given or next(iter(BACKENDS))
+def resolve_choice(question: str, labels: dict[str, str], given: str | None, interactive: bool) -> str:
+    """Return the option given on the command line, else ask, else (with --yes) the first choice."""
+    if given is not None or not interactive or len(labels) == 1:
+        return given or next(iter(labels))
     import questionary
 
-    choices = [questionary.Choice(backend["label"], value=key) for key, backend in BACKENDS.items()]
-    answer = questionary.select("Documentation", choices=choices).ask()
+    choices = [questionary.Choice(label, value=key) for key, label in labels.items()]
+    answer = questionary.select(question, choices=choices).ask()
     if answer is None:
         raise KeyboardInterrupt
     return answer
@@ -278,7 +287,11 @@ def new_project(args: argparse.Namespace) -> int:
         interactive,
     )
     values["github_url"] = values["github_url"].rstrip("/").removesuffix(".git")
-    backend = resolve_backend(args.docs, interactive)
+    values["license"] = resolve_choice(f"License ({OTHER_LICENSES})", LICENSES, args.license, interactive)
+    values["year"] = str(datetime.date.today().year)
+    backend = resolve_choice(
+        "Documentation", {key: spec["label"] for key, spec in BACKENDS.items()}, args.docs, interactive
+    )
 
     print(f"\nProject in {dest}:")
     for key, value in {**values, "docs": backend}.items():
@@ -326,6 +339,9 @@ def main(argv: list[str] | None = None) -> int:
     new.add_argument("--author", help="author (default: git config user.name)")
     new.add_argument("--github", help="repository URL (default: https://github.com/SCENE-Collaboration/<name>)")
     new.add_argument("--docs", choices=list(BACKENDS), help="documentation backend")
+    new.add_argument(
+        "--license", choices=list(LICENSES), help=f"license (default: {next(iter(LICENSES))}; {OTHER_LICENSES})"
+    )
     new.add_argument("-y", "--yes", action="store_true", help="use defaults for options not given; do not confirm")
     new.add_argument("-n", "--dry-run", action="store_true", help="ask everything, list the files, write nothing")
     args = parser.parse_args(argv)
