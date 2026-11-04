@@ -7,9 +7,9 @@ This template uses Jupyter Book 2. The configuration is `docs/myst.yml`.
 ## Write
 
 - Pages are Markdown files and notebooks in `docs/`; the landing page is `docs/index.md`.
-- Add a page by creating the file and listing it under `toc:` in `myst.yml`. Pages not listed there are not built.
+- Add a page by creating the file in `docs/`: every page there is built and listed in the sidebar, in alphabetical order, with folders as sections. To choose the order, add a [`toc:`](https://mystmd.org/guide/table-of-contents) to `myst.yml`; pages not listed there are then not built.
 - Images go in `docs/images/`.
-- Notebooks (`.ipynb`) can be listed like any page. They are shown with the outputs saved in them, not re-executed: [Figure 5 kinematics](../contributed-examples/MLAI/figure-5-kinematics.ipynb) is an example.
+- Notebooks (`.ipynb`) are pages like any other. They are shown with the outputs saved in them, not re-executed: [Figure 5 kinematics](../contributed-examples/MLAI/figure-5-kinematics.ipynb) is an example.
 
 ## Preview locally
 

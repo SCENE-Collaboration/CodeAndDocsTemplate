@@ -1,0 +1,49 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [ "setuptools>=77" ]
+
+[project]
+name = "$dist_name"
+description = "$description"
+readme = "README.md"
+license = "Apache-2.0" # keep in line with LICENSE
+license-files = [ "LICENSE" ]
+authors = [ { name = "$author" } ]
+requires-python = ">=3.10"
+classifiers = [
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Topic :: Scientific/Engineering",
+]
+dynamic = [ "version" ]
+dependencies = []
+
+optional-dependencies.dev = [ "pre-commit", "pytest", "pytest-cov" ]
+optional-dependencies.docs = [ $docs_dependencies ]
+urls."Bug Tracker" = "$github_url/issues"
+urls.Source = "$github_url"
+
+[tool.setuptools]
+packages = [ "$package" ]
+
+[tool.setuptools.dynamic]
+version = { attr = "$package.version.__version__" }
+
+[tool.pytest.ini_options]
+testpaths = [ "tests" ]
+addopts = [ "-ra", "--strict-markers" ]
+xfail_strict = true
+
+[tool.ruff]
+line-length = 120
+force-exclude = true
+
+[tool.ruff.lint]
+# Rules that catch bugs or that ruff fixes itself; style is left to `ruff format`.
+select = [ "E4", "E7", "E9", "F", "B", "I", "UP", "PIE" ]
+ignore = [ "E741", "B007" ]
+per-file-ignores."*.ipynb" = [ "E402" ]
+
+[tool.codespell]
+skip = "*.ipynb,*.png,*.svg,_build"

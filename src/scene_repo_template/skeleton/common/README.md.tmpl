@@ -1,0 +1,25 @@
+# $title
+
+$description
+
+## Development
+
+In an activated environment (venv or conda):
+
+```bash
+pip install -e ".[dev]"
+pre-commit install
+pytest
+```
+
+With uv: `uv sync --extra dev`, then `uv run pre-commit install` and `uv run pytest`.
+
+Add dependencies under `dependencies` in `pyproject.toml`. The `uv-lock` pre-commit hook updates `uv.lock`; commit it with the change.
+
+## Documentation
+
+$docs_readme
+
+## License
+
+Apache-2.0: see `LICENSE`.

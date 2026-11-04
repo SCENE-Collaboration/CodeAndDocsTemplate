@@ -26,9 +26,9 @@ project:
 site:
   template: book-theme
   options:
-    logo: images/scene-logo.png
+    logo: ../src/scene_repo_template/skeleton/jupyter-book/docs/images/scene-logo.png
     logo_text: SCENE
-    favicon: images/favicon.png
-    style: _static/scene.css
+    favicon: ../src/scene_repo_template/skeleton/jupyter-book/docs/images/favicon.png
+    style: ../src/scene_repo_template/skeleton/jupyter-book/docs/_static/scene.css
   parts:
-    primary_sidebar_footer: _static/footer.md
+    primary_sidebar_footer: ../src/scene_repo_template/skeleton/jupyter-book/docs/_static/footer.md

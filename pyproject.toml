@@ -3,8 +3,8 @@ build-backend = "setuptools.build_meta"
 requires = [ "setuptools>=77" ]
 
 [project]
-name = "SCENE-placeholder" # Please update
-description = "A SCENE collaboration package for..."
+name = "scene-repo-template"
+description = "Create SCENE code projects: packaging, tests, CI and documentation already set up."
 readme = "README.md"
 license = "Apache-2.0" # keep in line with LICENSE
 license-files = [ "LICENSE" ]
@@ -17,18 +17,21 @@ classifiers = [
   "Topic :: Scientific/Engineering",
 ]
 dynamic = [ "version" ]
-dependencies = []
+dependencies = [ "questionary>=2" ]
 
 optional-dependencies.dev = [ "pre-commit", "pytest", "pytest-cov" ]
 optional-dependencies.docs = [ "jupyter-book>=2" ]
+scripts.scene-repo-template = "scene_repo_template.cli:main"
 urls."Bug Tracker" = "https://github.com/SCENE-Collaboration/CodeAndDocsTemplate/issues"
 urls.Source = "https://github.com/SCENE-Collaboration/CodeAndDocsTemplate"
 
 [tool.setuptools]
-packages = [ "placeholder" ]
+packages.find.where = [ "src" ]
+# The project skeleton ships as data: generated projects are copied from it.
+package-data.scene_repo_template = [ "skeleton/**/*" ]
 
 [tool.setuptools.dynamic]
-version = { attr = "placeholder.version.__version__" }
+version = { attr = "scene_repo_template.version.__version__" }
 
 [tool.pytest.ini_options]
 testpaths = [ "tests" ]

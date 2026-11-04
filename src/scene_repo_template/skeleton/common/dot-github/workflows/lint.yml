@@ -1,0 +1,36 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pre-commit:
+    # CI runs on public repositories only: private ones draw on the org's Actions quota, which can be billed. Delete this line to opt in.
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - name: A lockfile is committed
+        run: |
+          for f in uv.lock poetry.lock pdm.lock pixi.lock conda-lock.yml renv.lock Manifest.toml package-lock.json Cargo.lock; do
+            [ -f "$f" ] && exit 0
+          done
+          echo "::error::No lockfile committed; run uv lock and commit uv.lock."
+          exit 1
+      - run: pip install pre-commit
+      # Check-only hooks: see .pre-commit-config.yaml.
+      - run: pre-commit run --all-files --hook-stage manual --show-diff-on-failure
