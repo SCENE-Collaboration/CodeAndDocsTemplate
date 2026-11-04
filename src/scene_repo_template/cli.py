@@ -9,6 +9,7 @@ import re
 import subprocess
 import sys
 import unicodedata
+import urllib.parse
 from collections.abc import Callable
 from pathlib import Path
 from string import Template
@@ -54,17 +55,43 @@ def gitignored_names() -> frozenset[str]:
     return frozenset(name for line in lines if PACKAGE.fullmatch(name := line.strip().strip("/")))
 
 
+def canonical_name(dist_name: str) -> str:
+    """PEP 503 form, so `Pre_Commit` and `pre-commit` compare equal."""
+    return re.sub(r"[-_.]+", "-", dist_name).lower()
+
+
+def requirement_names(requirements: str) -> set[str]:
+    """Canonical distribution names in a list of quoted requirements: `"pytest>=8", "mkdocstrings[python]"`."""
+    return {canonical_name(name) for name in re.findall(r'"([A-Za-z0-9._-]+)', requirements)}
+
+
+@functools.cache
+def dev_distributions() -> frozenset[str]:
+    """The generated project's dev extra (pre-commit, pytest, ...), read from its pyproject."""
+    text = (SKELETON / "common" / f"pyproject.toml{TEMPLATE_SUFFIX}").read_text(encoding="utf-8")
+    return frozenset(
+        requirement_names(re.search(r"^optional-dependencies\.dev = \[(.*)\]$", text, re.MULTILINE).group(1))
+    )
+
+
 @functools.cache
 def dev_tool_names() -> frozenset[str]:
-    """Import names of the generated project's dev extra (pytest, pre_commit, ...), read from its pyproject."""
-    text = (SKELETON / "common" / f"pyproject.toml{TEMPLATE_SUFFIX}").read_text(encoding="utf-8")
-    dev = re.search(r"^optional-dependencies\.dev = \[(.*)\]$", text, re.MULTILINE).group(1)
-    return frozenset(re.sub(r"[-.]", "_", name.lower()) for name in re.findall(r'"([A-Za-z0-9._-]+)', dev))
+    """Import names of the dev extra (pytest, pre_commit, ...)."""
+    return frozenset(name.replace("-", "_") for name in dev_distributions())
+
+
+@functools.cache
+def toolchain_distributions() -> frozenset[str]:
+    """Every distribution the generated extras depend on: dev, and docs for each backend."""
+    docs = set().union(*(requirement_names(backend["docs_dependencies"]) for backend in BACKENDS.values()))
+    return dev_distributions() | docs
 
 
 def check_dist_name(value: str) -> str | None:
     if not DIST_NAME.fullmatch(value):
         return "use letters, digits, '-', '_' or '.', starting and ending with a letter or digit"
+    if canonical_name(value) in toolchain_distributions():
+        return f"{value} is one of the project's own dependencies; the project would depend on itself"
     return None
 
 
@@ -93,6 +120,8 @@ def check_text(value: str) -> str | None:
 def check_url(value: str) -> str | None:
     if not value.startswith(("https://", "http://")) or " " in value or UNQUOTABLE.search(value):
         return "must be an http(s) URL"
+    if not urllib.parse.urlsplit(value).hostname:
+        return "must be an http(s) URL with a host, e.g. https://github.com/lab/project"
     return None
 
 

@@ -221,6 +221,12 @@ def test_a_distribution_name_with_a_trailing_newline_is_refused(tmp_path):
     assert refused(tmp_path, "--name=my-project\n", "--title=My project", "--github=https://github.com/x/my-project")
 
 
+@pytest.mark.parametrize("name", ["pytest", "Pre_Commit", "pytest.cov", "jupyter-book"])
+def test_a_distribution_name_of_a_toolchain_dependency_is_refused(tmp_path, name):
+    # An explicit import name, else the default (derived from the name) would be what is refused.
+    assert refused(tmp_path, f"--name={name}", "--package=my_project")
+
+
 def test_a_folder_named_like_an_ignored_folder_gets_a_committable_default_import_name(tmp_path):
     dest = generate(tmp_path, folder="build")
     assert (dest / "project" / "__init__.py").is_file()
@@ -231,8 +237,9 @@ def test_a_title_that_cannot_be_quoted_is_refused(tmp_path, title):
     assert refused(tmp_path, f"--title={title}")
 
 
-def test_a_github_url_must_be_a_url(tmp_path):
-    assert refused(tmp_path, "--github=SCENE-Collaboration/my-project")
+@pytest.mark.parametrize("url", ["SCENE-Collaboration/my-project", "https://", "https:///my-project"])
+def test_a_github_url_must_be_a_url_with_a_host(tmp_path, url):
+    assert refused(tmp_path, f"--github={url}")
 
 
 def run(dest, *command):
