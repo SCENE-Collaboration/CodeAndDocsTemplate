@@ -115,7 +115,7 @@ Install packages that only exist on conda (or that you prefer from conda-forge) 
 ::::
 
 `pip install -e` installs the package in editable mode: changes to its code take effect without reinstalling.
-See *Code Formatting & Linting* in the [Guidelines](guidelines.md) for an explanation of the hooks.
+See *Code Formatting & Linting* in the [Project standards](guidelines.md) for an explanation of the hooks.
 
 ## 3. Choose a license
 
@@ -130,13 +130,13 @@ The `uv-lock` pre-commit hook writes `uv.lock` on every commit that changes `pyp
 Commit `uv.lock` with the change.
 
 ```{note}
-`uv.lock` covers only `pyproject.toml`: record conda-only packages in a separate lockfile, see *Lockfiles* in the [Guidelines](guidelines.md).
+`uv.lock` covers only `pyproject.toml`: record conda-only packages in a separate lockfile, see *Lockfiles* in the [Project standards](guidelines.md).
 ```
 
 ## 5. Turn on CI and the docs site
 
 - Create the repository on GitHub at the URL you decided, then commit and push.
-- CI runs as soon as you push, if the repository is public and Actions is enabled (**Settings → Actions**): see *Continuous Integration* in the [Guidelines](guidelines.md).
+- CI runs as soon as you push, if the repository is public and Actions is enabled (**Settings → Actions**): see *Continuous Integration* in the [Project standards](guidelines.md).
 - To publish the docs, enable GitHub Pages once: see [Documentation with Jupyter Book](jupyter-book.md#publish).
 
 ```{important}
